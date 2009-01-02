@@ -41,7 +41,7 @@ from threaded_multihost import threadlocals
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db.models.loading import app_cache_ready
-from satchmo import caching
+import keyedcache
 import logging
 
 log = logging.getLogger('threaded_multihost.sites')
@@ -77,8 +77,8 @@ def by_host(host=None, id_only=False):
     if host:
         if app_cache_ready():
             try:
-                site = caching.cache_get('SITE', host=host, id_only=id_only)
-            except caching.NotCachedError, nce:
+                site = keyedcache.cache_get('SITE', host=host, id_only=id_only)
+            except keyedcache.NotCachedError, nce:
                 try:
                     log.debug('looking up site by host: %s', host)
                     site = Site.objects.get(domain=host)
@@ -92,7 +92,7 @@ def by_host(host=None, id_only=False):
                             pass
                             
                 if site:
-                    caching.cache_set(nce.key, value=site)
+                    keyedcache.cache_set(nce.key, value=site)
                     
                     if id_only:
                         site = site.id
