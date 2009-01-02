@@ -1,3 +1,5 @@
+import ez_setup
+ez_setup.use_setuptools()
 from setuptools import setup, find_packages
 
 version = __import__('threaded_multihost').__version__
