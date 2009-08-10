@@ -23,7 +23,7 @@ setup(
                    'Operating System :: OS Independent',
                    'Programming Language :: Python',
                    'Topic :: Utilities'],    
-    packages = find_packages(),
+    packages = ['threaded_multihost'],
     #package_dir = {'':'threaded_multihost'},
     include_package_data = True,
 )
