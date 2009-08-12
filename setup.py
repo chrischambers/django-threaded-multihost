@@ -25,5 +25,6 @@ setup(
                    'Topic :: Utilities'],    
     packages = ['threaded_multihost'],
     #package_dir = {'':'threaded_multihost'},
-    include_package_data = True,
+    include_package_data = False,
+    setup_requires = ["setuptools_hg"],
 )
