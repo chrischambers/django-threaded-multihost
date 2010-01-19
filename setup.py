@@ -12,7 +12,7 @@ setup(
     enable easy multi-site awareness in Django apps.""",
     author = 'Bruce Kroeze',
     author_email = 'brucek@solidsitesolutions.com',
-    url = 'http://getbanjo.com/threaded-multihost/',
+    url = 'http://bitbucket.org/bkroeze/django-threaded-multihost/',
     license = 'New BSD License',
     platforms = ['any'],
     classifiers = ['Development Status :: 4 - Beta',
