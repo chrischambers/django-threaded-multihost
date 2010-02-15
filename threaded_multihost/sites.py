@@ -65,11 +65,22 @@ def by_host(host=None, id_only=False):
         site = -1
     else:
         site = None
+        
+    debug_domain = None
+    if settings.DEBUG and hasattr(settings, 'MULTIHOST_DEBUG_DOMAIN'):
+        raw = settings.MULTIHOST_DEBUG_DOMAIN
+        parts = raw.split('=')
+        if len(parts) == 2:
+            debug_domain = parts[0]
+            debug_target = parts[1]
+        else:
+            debug_domain = raw
+            debug_target = 'com'
 
     if not host:
         request = threadlocals.get_current_request()
-        if request and 'HTTP_HOST' in request.META:
-            host = request.META['HTTP_HOST']
+        if request:
+            host = request.get_host()
         else:
             log.debug('No request')
             site = by_settings(id_only=id_only)
@@ -90,7 +101,14 @@ def by_host(host=None, id_only=False):
                             site = Site.objects.get(domain=host)
                         except Site.DoesNotExist:
                             pass
-                            
+                    if debug_domain and host.endswith(debug_domain):
+                        host = host[:-len(debug_domain)] + debug_target
+                        log.debug('Using debug domain: %s', host)
+                        try:
+                            site = Site.objects.get(domain=host)
+                        except Site.DoesNotExist:
+                            pass
+
                 if site:
                     keyedcache.cache_set(nce.key, value=site)
                     
