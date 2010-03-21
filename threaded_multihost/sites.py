@@ -7,7 +7,7 @@
 """
 New BSD License
 ===============
-Copyright (c) 2008, Bruce Kroeze http://coderseye.com
+Copyright (c) 2010, Bruce Kroeze http://coderseye.com
 
 All rights reserved.
 
@@ -19,8 +19,8 @@ modification, are permitted provided that the following conditions are met:
     * Redistributions in binary form must reproduce the above copyright notice,
       this list of conditions and the following disclaimer in the documentation
       and/or other materials provided with the distribution.
-    * Neither the name of SolidSiteSolutions LLC, Zefamily LLC nor the names of its 
-      contributors may be used to endorse or promote products derived from this 
+    * Neither the name of SolidSiteSolutions LLC, Zefamily LLC nor the names of its
+      contributors may be used to endorse or promote products derived from this
       software without specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
@@ -37,10 +37,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 __docformat__="restructuredtext"
 
-from threaded_multihost import threadlocals
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db.models.loading import app_cache_ready
+from threaded_multihost import threadlocals
+from threaded_multihost.threadlocal_settings import get_threadlocal_setting
 import keyedcache
 import logging
 
@@ -51,11 +52,11 @@ class MultihostNotReady(Exception):
     pass
 
 def by_host(host=None, id_only=False):
-    """Get the current site by looking at the request stored in the thread.  
-    
+    """Get the current site by looking at the request stored in the thread.
+
     Returns the best match found in the `django.contrib.sites` app.  If not
     found, then returns the default set as given in `settings.SITE_ID`
-    
+
     Params:
      - `host`: optional, host to look up
      - `id_only`: if true, then do not retrieve the full site, just the id.
@@ -65,10 +66,10 @@ def by_host(host=None, id_only=False):
         site = -1
     else:
         site = None
-        
+
     debug_domain = None
-    if settings.DEBUG and hasattr(settings, 'MULTIHOST_DEBUG_DOMAIN'):
-        raw = settings.MULTIHOST_DEBUG_DOMAIN
+    if settings.DEBUG:
+        raw = get_threadlocal_setting('DEBUG_DOMAIN')
         parts = raw.split('=')
         if len(parts) == 2:
             debug_domain = parts[0]
@@ -84,11 +85,14 @@ def by_host(host=None, id_only=False):
         else:
             log.debug('No request')
             site = by_settings(id_only=id_only)
-        
+
     if host:
         if app_cache_ready():
             try:
                 site = keyedcache.cache_get('SITE', host=host, id_only=id_only)
+                if id_only:
+                    site = site.id
+
             except keyedcache.NotCachedError, nce:
                 try:
                     log.debug('looking up site by host: %s', host)
@@ -109,36 +113,39 @@ def by_host(host=None, id_only=False):
                         except Site.DoesNotExist:
                             pass
 
+                if not site and get_threadlocal_setting('AUTO_WWW'):
+                    if host.startswith('www'):
+                        log.debug('trying site lookup without www')
+                        site = by_host(host=host[4:], id_only=id_only)
+                    else:
+                        log.debug('trying site lookup with www')
+                        site = by_host(host = 'www.%s' % host, id_only=id_only)
+
                 if site:
                     keyedcache.cache_set(nce.key, value=site)
-                    
+
                     if id_only:
                         site = site.id
-                    
+
                 else:
                     if not host in _WARNED:
-                        log.warn("Site for '%s' is not configured on this site - add to sites in admin", host)
+                        log.warn("Site for '%s' is not configured on this server - add to sites in admin", host)
                         _WARNED[host] = True
-                        
+
                     site = by_settings(id_only=id_only)
-                
+
         else:
             log.debug('app cache not ready')
             site = by_settings(id_only=id_only)
     else:
         pass
-        #log.debug('no host')    
-            
-    # if site is None or site == -1:
-    #     raise MultihostNotReady()
-            
-    #log.debug("current site: %s", site)
+
     return site
-        
+
 def by_request(request=None, id_only=False):
     """Look up a site given an explicit request rather than using the request
     currently in the `threadlocals`.
-    
+
     Params:
      - `request`: optional, the request to use, defaults to the request found in the threadlocals
      - `id_only`: if true, then only the id is returned.
@@ -147,10 +154,10 @@ def by_request(request=None, id_only=False):
     if request and 'HTTP_HOST' in request.META:
         host = request.META['HTTP_HOST']
     return by_host(host=host, id_only=id_only)
-        
+
 def by_settings(id_only=False):
     """Get the site according to the SITE_ID in settings.
-    
+
     Params:
      - `id_only`: if true, then only the id is returned.
     """
@@ -158,7 +165,7 @@ def by_settings(id_only=False):
     global _WARNED
     if id_only:
         return settings.SITE_ID
-        
+
     try:
         return Site.objects.get(pk=settings.SITE_ID)
     except Exception, e:
@@ -170,5 +177,5 @@ def by_settings(id_only=False):
                 _WARNED['django_site'] = True
         else:
             raise
-            
+
     return site
