@@ -68,15 +68,17 @@ def by_host(host=None, id_only=False):
         site = None
 
     debug_domain = None
+    debug_target = None
     if settings.DEBUG:
         raw = get_threadlocal_setting('DEBUG_DOMAIN')
-        parts = raw.split('=')
-        if len(parts) == 2:
-            debug_domain = parts[0]
-            debug_target = parts[1]
-        else:
-            debug_domain = raw
-            debug_target = 'com'
+        if raw:
+            parts = raw.split('=')
+            if len(parts) == 2:
+                debug_domain = parts[0]
+                debug_target = parts[1]
+            else:
+                debug_domain = raw
+                debug_target = 'com'
 
     if not host:
         request = threadlocals.get_current_request()
