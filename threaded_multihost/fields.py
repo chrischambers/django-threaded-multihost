@@ -11,11 +11,12 @@ class UserField(ForeignKey):
     """
 
     def __init__(self, **kwargs):
+        kwargs.setdefault('to', User)
         kwargs.setdefault('null', True)
         kwargs.setdefault('blank', True)
-        ForeignKey.__init__(self, User, **kwargs)
+        ForeignKey.__init__(self, **kwargs)
 
-      
+
 class CreatorField(UserField):
     """ CreatorField
 
@@ -46,3 +47,11 @@ class EditorField(CreatorField):
             value = value.pk
         setattr(model_instance, self.attname, value)
         return value
+
+try:
+    from south.modelsinspector import add_introspection_rules
+except ImportError:
+    add_introspection_rules = False
+
+if add_introspection_rules:
+    add_introspection_rules([], [r"^threaded_multihost\.fields\.(User|Creator|Editor)Field"])
