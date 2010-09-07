@@ -1,5 +1,5 @@
 from models import Article, ArticleCreator, ArticleEditor
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, AnonymousUser
 from threaded_multihost.threadlocals import get_current_user, set_current_user
 
 __test__ = {'API_TESTS': """
@@ -61,4 +61,22 @@ True
 >>> c.user
 <User: editor>
 
+# If the fields get an AnonymousUser from threadlocals, they should handle them
+# appropriately and save NULL values to the database:
+>>> anon = AnonymousUser()
+>>> set_current_user(anon)
+
+>>> anonb = ArticleCreator.objects.create(text="foo")
+>>> anonb.user is None
+True
+>>> anonb = ArticleCreator.objects.get(pk=anonb.pk)
+>>> anonb.user is None
+True
+
+>>> anonc = ArticleEditor.objects.create(text="bar")
+>>> anonc.user is None
+True
+>>> anonc = ArticleEditor.objects.get(pk=anonc.pk)
+>>> anonc.user is None
+True
 """}
