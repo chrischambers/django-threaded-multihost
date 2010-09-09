@@ -23,9 +23,15 @@ class CreatorField(UserField):
     By default, sets editable=False, default=threadlocals.get_current_user
     """
 
+    def get_current_user(self):
+        user = threadlocals.get_current_user()
+        if user and not user.is_authenticated():
+            user = None
+        return user
+
     def __init__(self, **kwargs):
         kwargs.setdefault('editable', False)
-        kwargs.setdefault('default', threadlocals.get_current_user)
+        kwargs.setdefault('default', self.get_current_user)
         UserField.__init__(self, **kwargs)
 
 
@@ -41,7 +47,7 @@ class EditorField(CreatorField):
         super(CreatorField, self).__init__(**kwargs)
 
     def pre_save(self, model_instance, add):
-        value = threadlocals.get_current_user()
+        value = self.get_current_user()
         setattr(model_instance, self.name, value)
         if value:
             value = value.pk
