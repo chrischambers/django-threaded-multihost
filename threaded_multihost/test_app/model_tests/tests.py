@@ -1,6 +1,9 @@
 from models import Article, ArticleCreator, ArticleEditor
 from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.sites.models import Site
+from threaded_multihost.sites import by_host
 from threaded_multihost.threadlocals import get_current_user, set_current_user
+import unittest
 
 __test__ = {'API_TESTS': """
 
@@ -80,3 +83,21 @@ True
 >>> anonc.user is None
 True
 """}
+
+
+class ThreadedMultihostTest(unittest.TestCase):
+    def test_by_host(self):
+        "Tests typical usage"
+        site2 = Site(domain='www.example.org', name='www.example.org')
+        site2.save()
+        self.assertEqual(by_host('example.com').domain, 'example.com')
+        self.assertEqual(by_host('www.example.com').domain, 'example.com')
+        self.assertEqual(by_host('example.org').domain, 'www.example.org')
+        self.assertEqual(by_host('www.example.org').domain, 'www.example.org')
+
+    def test_by_host_unknown(self):
+        "Regression test for Satchmo #1276"
+        # unknown string should get default domain by settings.SITE_ID
+        # but never RuntimeError: "maximum recursion depth exceeded in cmp"
+        self.assertEqual(by_host('nonsense.com').domain, 'example.com')
+        self.assertEqual(by_host('www.nonsense.com').domain, 'example.com')
