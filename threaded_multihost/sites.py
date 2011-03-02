@@ -51,7 +51,7 @@ _WARNED = {}
 class MultihostNotReady(Exception):
     pass
 
-def by_host(host=None, id_only=False):
+def by_host(host=None, id_only=False, called_recursive=None):
     """Get the current site by looking at the request stored in the thread.
 
     Returns the best match found in the `django.contrib.sites` app.  If not
@@ -115,13 +115,13 @@ def by_host(host=None, id_only=False):
                         except Site.DoesNotExist:
                             pass
 
-                if not site and get_threadlocal_setting('AUTO_WWW'):
+                if not site and get_threadlocal_setting('AUTO_WWW') and not called_recursive:
                     if host.startswith('www'):
                         log.debug('trying site lookup without www')
-                        site = by_host(host=host[4:], id_only=id_only)
+                        site = by_host(host=host[4:], id_only=id_only, called_recursive=True)
                     else:
                         log.debug('trying site lookup with www')
-                        site = by_host(host = 'www.%s' % host, id_only=id_only)
+                        site = by_host(host = 'www.%s' % host, id_only=id_only, called_recursive=True)
 
                 if site:
                     keyedcache.cache_set(nce.key, value=site)
