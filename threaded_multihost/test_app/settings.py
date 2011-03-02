@@ -83,5 +83,5 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
-    'tests.model_tests',
+    'test_app.model_tests',
 )
