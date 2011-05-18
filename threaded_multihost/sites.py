@@ -40,6 +40,7 @@ __docformat__="restructuredtext"
 from django.conf import settings
 from django.contrib.sites.models import Site
 from django.db.models.loading import app_cache_ready
+from django.db.models.signals import post_delete, post_save
 from threaded_multihost import threadlocals
 from threaded_multihost.threadlocal_settings import get_threadlocal_setting
 import keyedcache
@@ -181,3 +182,17 @@ def by_settings(id_only=False):
             raise
 
     return site
+
+def catch_sites(*args, **kwargs):
+    """Listen to sites modifications due to cache flushing"""
+    #keyedcache.cache_delete('SITE', children=True)
+    import keyedcache
+    #print keyedcache.CACHED_KEYS
+    #import pdb; pdb.set_trace()
+    # We can not rely on the domain name of the modified/deleted site when testing. Because it is 'testserver'.
+    # The following would be better, but does not work:
+    keyedcache.cache_delete('SITE', host=kwargs['instance'].domain, children=True)
+    #log.debug('Following sites are cached %s' % filter(lambda x: x.startswith(keyedcache.cache_key('SITE')), keyedcache.CACHED_KEYS))
+
+post_delete.connect(catch_sites, sender=Site)
+post_save.connect(catch_sites, sender=Site)
