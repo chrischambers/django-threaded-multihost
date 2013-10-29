@@ -1,8 +1,10 @@
 # Django settings for mytest project.
 
+import sys
 from os.path import normpath, join, dirname
 #ROOT : the django project root
 ROOT = lambda *base : normpath(join(dirname(__file__), *base)).replace('\\','/')
+sys.path.append(ROOT(dirname(dirname(dirname(__file__)))))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -62,9 +64,10 @@ TEMPLATE_LOADERS = (
 )
 
 MIDDLEWARE_CLASSES = (
-    'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
     'threaded_multihost.middleware.ThreadLocalMiddleware',
 )
 
