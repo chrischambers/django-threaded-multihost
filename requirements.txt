@@ -1,0 +1,2 @@
+Django==1.5.5
+django-keyedcache==1.4-6
