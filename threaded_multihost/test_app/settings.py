@@ -12,6 +12,7 @@ TEMPLATE_DEBUG = DEBUG
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
+AUTH_USER_MODEL = 'custom_user.User'
 
 MANAGERS = ADMINS
 
@@ -86,6 +87,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'test_app.custom_user',
     'test_app.model_tests',
     'django.contrib.sitemaps',
 )

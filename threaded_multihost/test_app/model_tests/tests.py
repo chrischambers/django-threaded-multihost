@@ -1,11 +1,14 @@
 from models import Article, ArticleCreator, ArticleEditor
-from django.contrib.auth.models import User, AnonymousUser
+from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AnonymousUser
 from django.contrib.sites.models import Site
 from threaded_multihost.sites import by_host
 from threaded_multihost.threadlocals import get_current_user, set_current_user
 import unittest
 
 __test__ = {'API_TESTS': """
+
+>>> User = get_user_model()
 
 >>> a = Article(text="Look at me any user")
 >>> a.save()
