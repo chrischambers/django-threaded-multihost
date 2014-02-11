@@ -1,5 +1,5 @@
 from django.db.models import ForeignKey
-from django.contrib.auth import get_user_model
+from django.conf import settings
 
 import threadlocals
 
@@ -11,7 +11,7 @@ class UserField(ForeignKey):
     """
 
     def __init__(self, **kwargs):
-        kwargs.setdefault('to', get_user_model())
+        kwargs.setdefault('to', settings.AUTH_USER_MODEL)
         kwargs.setdefault('null', True)
         kwargs.setdefault('blank', True)
         ForeignKey.__init__(self, **kwargs)
